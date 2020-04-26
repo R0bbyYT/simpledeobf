@@ -58,6 +58,21 @@ for any given mod. If it uses reflection and/or class transformation, chances
 are good that it will just crash anyway, unless it's specifically made to be
 environment agnostic.
 
+### LayMod API
+
+##### Why was the LabyMod support added?
+
+The main reason is that the LabyMod team has not provided an API for many versions. Therefore support has been added.
+
+Now follows an example how to set up the API.
+
+```
+java -jar simpledeobf-0.6.1.jar
+--input [minecraft-directory]/libraries/net/labymod/LabyMod/LabyMod-3_1.12.2.jar
+--output [your-directory]/lm_api_1.12.2.jar
+--mapFile [gradle-cache-directory]\minecraft\de\oceanlabs\mcp\mcp_snapshot\{mapping-version}\1.12.2\notch-mcp.srg
+--ref [gradle-cache-directory]\minecraft\net\minecraft\1.12.2\minecraft-1.12.2.jar
+```
 ### Have OptiFine, will debug
 
 As an example, here is a guide on getting OptiFine into your dev

@@ -1,4 +1,5 @@
 @file:JvmName("Main")
+
 package com.octarine.simpledeobf
 
 import com.nothome.delta.GDiffPatcher
@@ -15,7 +16,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-fun main(args : Array<String>) {
+fun main(args: Array<String>) {
 
     try {
         val parser = OptionParser()
@@ -69,6 +70,10 @@ fun main(args : Array<String>) {
             println("Reading hiererchy from: ${it.absolutePath}")
             mapper.hierarchyReader.visitAllFromFile(it)
         }
+
+        //Checks if the input file stats with LabyMod-3
+        val isLabyMod = options.valueOf(inputFile).name.startsWith("LabyMod-3")
+
         options.valuesOf(inputFile).forEach {
             println("Reading hiererchy from: ${it.absolutePath}")
             mapper.hierarchyReader.visitAllFromFile(it)
@@ -78,6 +83,7 @@ fun main(args : Array<String>) {
             if (it.exists()) it.delete()
             ZipOutputStream(FileOutputStream(it))
         }
+
 
         fun writeDeobfedClass(srcBytes: ByteArray, name: String) {
             val srcClass = ClassNode().apply { ClassReader(srcBytes).accept(this, ClassReader.EXPAND_FRAMES) }
@@ -97,14 +103,14 @@ fun main(args : Array<String>) {
                 var srcName = srcEntry.name
                 var srcBytes = srcJar.getInputStream(srcEntry).readBytes()
                 if (doPatchProcessing &&
-                    srcName.endsWith(options.valueOf(xdeltaPostfix)!!) &&
-                    srcName.startsWith(options.valueOf(xdeltaPrefix)!!)) {
+                        srcName.endsWith(options.valueOf(xdeltaPostfix)!!) &&
+                        srcName.startsWith(options.valueOf(xdeltaPrefix)!!)) {
                     // patch file - try to patch a matching file from a reference JAR
                     print("   patching: ${srcName}")
                     val patchBytes = srcBytes + 0   // make sure there's an EOF marker
                     val origName = srcEntry.name.subSequence(
-                        options.valueOf(xdeltaPrefix)!!.length,
-                        srcEntry.name.length - options.valueOf(xdeltaPostfix)!!.length
+                            options.valueOf(xdeltaPrefix)!!.length,
+                            srcEntry.name.length - options.valueOf(xdeltaPostfix)!!.length
                     ) as String
                     val origBytes = (options.valuesOf(inputFile) + options.valuesOf(referenceFile)).map {
                         val refFile = ZipFile(it)
@@ -118,6 +124,15 @@ fun main(args : Array<String>) {
                         println("")
                     }
                 }
+
+                //Skips all unnecessary classes for the API
+                if (isLabyMod && srcName.startsWith("net/minecraftforge/")
+                        || srcName.startsWith("net/labymod/vanillaforge/")
+                        || srcName.startsWith("LabyMod.class")
+                        || srcName.startsWith("EventCaller.class")) {
+                    continue
+                }
+
                 if (srcName.endsWith(".class")) {
                     print("   processing: ${srcName} ")
                     writeDeobfedClass(srcBytes, srcEntry.name)
@@ -132,10 +147,10 @@ fun main(args : Array<String>) {
 
         println("Conversion finished")
         destJar.close()
-    } catch(e: OptionException) {
+    } catch (e: OptionException) {
         println(e.message)
         System.exit(1)
-    } catch(e: FileNotFoundException) {
+    } catch (e: FileNotFoundException) {
         println(e.message)
         System.exit(1)
     }
